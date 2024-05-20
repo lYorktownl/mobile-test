@@ -1,6 +1,16 @@
 <template>
   <div class="hello">
-    <h1>Hello</h1>
+    <div class="title">// заголовок
+      
+      <h1>Hello</h1>
+      <p>Отобразить товары</p>
+    </div>
+    <div>//картинки телефонов + чекбокс
+
+    </div>
+    <div>// таблица сравнения
+      
+    </div>
   </div>
 </template>
 
