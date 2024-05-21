@@ -134,8 +134,7 @@ a.button {
 }
 
 .dropdown ul li a:hover {
-  background-color: red;
-  color: greenyellow;
+  background-color: #cdcfd2;
 }
 
 /* Dropdown triangle */

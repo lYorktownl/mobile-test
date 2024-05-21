@@ -4,11 +4,11 @@
       <h1 class="title">Смартфоны</h1>
       <p class="display-products">
         Отобразить товары:
-        <a class="button"> 2 </a>
-        <a class="button">3 </a>
-        <a class="button">4 </a>
-        <a class="button">5 </a>
-        <a class="button">6</a>
+        <a class="button" @click="updateCount(2)"> 2 </a>
+        <a class="button" @click="updateCount(3)">3 </a>
+        <a class="button" @click="updateCount(4)">4 </a>
+        <a class="button" @click="updateCount(5)">5 </a>
+        <a class="button" @click="updateCount(6)">6</a>
       </p>
     </div>
     <label class="checkbox-label">
@@ -21,16 +21,18 @@
           <tr>
             <th></th>
             <th
-              v-for="(phone, index) in phones"
+              v-for="(phone, index) in displayedPhones"
               :key="index"
               class="phone-header"
             >
-              <img
-                :src="require(`@/assets/${phone.image}`)"
-                :alt="phone.name"
-                class="phone-image"
-              />
-              <p class="phone-name">{{ phone.name }}</p>
+              <div class="phone-card">
+                <img
+                  :src="require(`@/assets/${phone.image}`)"
+                  :alt="phone.name"
+                  class="phone-image"
+                />
+                <p class="phone-name">{{ phone.name }}</p>
+              </div>
             </th>
           </tr>
         </thead>
@@ -41,7 +43,7 @@
             class="table-row"
           >
             <td class="labels">{{ attribute.label }}</td>
-            <td v-for="(phone, idx) in phones" :key="idx">
+            <td v-for="(phone, idx) in displayedPhones" :key="idx">
               <span
                 v-if="
                   attribute.key === 'nfc' ||
@@ -116,6 +118,7 @@ export default defineComponent({
   name: "ComparsionTable",
   setup() {
     const showDifferences = ref(false);
+    const numberOfProduct = ref(3);
     const phones = ref<Phone[]>([
       {
         name: "Apple iPhone 12",
@@ -160,46 +163,46 @@ export default defineComponent({
         price: "32890 ₽",
       },
       {
-        name: "Samsung Galaxy A72",
+        name: "Samsung Galaxy S21",
         image: "samsung_s21.png",
         manufacturer: "Samsung",
         releaseYear: 2021,
-        screenSize: 6.7,
+        screenSize: 6.2,
         country: "Вьетнам",
         memory: "128 ГБ",
-        refreshRate: "90",
+        refreshRate: "120",
         nfc: true,
-        esim: false,
+        esim: true,
         wirelessCharging: true,
-        price: "32890 ₽",
+        price: "69990 ₽",
       },
       {
-        name: "Samsung Galaxy A72",
+        name: "Apple iPhone Xr",
         image: "iphone_xr.png",
-        manufacturer: "Samsung",
-        releaseYear: 2021,
-        screenSize: 6.7,
-        country: "Вьетнам",
-        memory: "128 ГБ",
-        refreshRate: "90",
+        manufacturer: "Apple",
+        releaseYear: 2018,
+        screenSize: 6.1,
+        country: "Китай",
+        memory: "64 ГБ",
+        refreshRate: "60",
         nfc: true,
-        esim: false,
+        esim: true,
         wirelessCharging: true,
-        price: "32890 ₽",
+        price: "59990 ₽",
       },
       {
-        name: "Samsung Galaxy A72",
+        name: "Realme 8 Pro",
         image: "realme_8pro.png",
-        manufacturer: "Samsung",
+        manufacturer: "Realme",
         releaseYear: 2021,
-        screenSize: 6.7,
-        country: "Вьетнам",
+        screenSize: 6.4,
+        country: "Китай",
         memory: "128 ГБ",
-        refreshRate: "90",
+        refreshRate: "60",
         nfc: true,
         esim: false,
-        wirelessCharging: true,
-        price: "32890 ₽",
+        wirelessCharging: false,
+        price: "24990 ₽",
       },
     ]);
     const attributes: Attribute[] = [
@@ -216,22 +219,31 @@ export default defineComponent({
     ];
     //проверка аттрибутов на отличия
     const hasDifference = (attribute: keyof Phone): boolean => {
-      const firstValue = phones.value[0][attribute]; // берем атрибут первого телефона из списка
-      return phones.value.some((phone) => phone[attribute] !== firstValue); // проверяем отличается ли хоть одно значение и возвращаем true/false
+      const firstValue = displayedPhones.value[0][attribute]; // берем атрибут первого телефона из списка
+      return displayedPhones.value.some(
+        (phone) => phone[attribute] !== firstValue
+      ); // проверяем отличается ли хоть одно значение и возвращаем true/false
     };
     //используем вычисляемое свойство для фильтрации и отображения строк
     const filteredAttributes = computed(() => {
-      //Если чекбокс без галки возвращаем все атрибуты
       if (!showDifferences.value) {
-        return attributes;
+        return attributes; //Если чекбокс без галки возвращаем все атрибуты
       }
       return attributes.filter((attribute) => hasDifference(attribute.key)); //если чекбокс с галкой проходимся фильтром по массиву атрибутов и оставляем те где hasDifference возвращает true
     });
-
+    const updateCount = (count: number) => {
+      numberOfProduct.value = count;
+      //console.log(count);
+    };
+    const displayedPhones = computed(() => {
+      return phones.value.slice(0, numberOfProduct.value);
+    });
     return {
       showDifferences,
       phones,
+      displayedPhones,
       filteredAttributes,
+      updateCount,
     };
   },
 });
@@ -285,6 +297,9 @@ a.button :active {
   align-items: center;
   justify-content: space-between;
   max-width: 100%;
+}
+.phone-card {
+  width: fit-content;
 }
 .checkbox-label {
   display: flex;
