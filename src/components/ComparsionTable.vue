@@ -1,5 +1,6 @@
 <template>
   <div>
+    <!-- заголовок -->
     <div class="head">
       <h1 class="title">Смартфоны</h1>
       <p class="display-products">
@@ -15,8 +16,10 @@
         </a>
       </p>
     </div>
+    <!-- начало таблицы -->
     <div class="table-container">
       <table class="table">
+        <!-- Верхняя часть таблицы -->
         <thead class="thead">
           <tr>
             <th>
@@ -29,12 +32,14 @@
                 <span>Показать различия</span>
               </label>
             </th>
+            <!-- ячейки с товарами -->
             <th
               v-for="(phone, index) in displayedPhones"
               :key="index"
               class="phone-header"
               @click="selectedPhoneIndex = index"
             >
+              <!-- карточка телефона -->
               <div class="phone-card">
                 <div>
                   <img
@@ -44,6 +49,7 @@
                   />
                   <p class="phone-name">{{ phone.name }}</p>
                 </div>
+                <!-- дропдаун -->
                 <details v-if="hiddenPhones.length" class="dropdown">
                   <summary role="button">
                     <svg
@@ -62,8 +68,10 @@
                       />
                     </svg>
                   </summary>
+                  <!-- дропдаун элементы -->
                   <div class="dropdown-content">
                     <input
+                      v-if="hiddenPhones.length >= 3"
                       class="input-search"
                       type="text"
                       v-model="searchQuery"
@@ -74,7 +82,6 @@
                       <li
                         v-for="hiddenPhone in filteredPhones"
                         :key="hiddenPhone.name"
-                        class="dropdown-item"
                       >
                         <button
                           class="dropdown-btn double-arrow"
@@ -114,6 +121,7 @@
             </th>
           </tr>
         </thead>
+        <!-- блок характерик -->
         <tbody>
           <div class="fon"></div>
           <tr
@@ -122,6 +130,7 @@
             class="table-row"
           >
             <td class="labels">{{ attribute.label }}</td>
+            <!-- свойства да/нет -->
             <td v-for="(phone, idx) in displayedPhones" :key="idx">
               <span
                 v-if="
@@ -174,6 +183,8 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed } from "vue";
+
+// Определение интерфейса Phone, который описывает структуру объекта телефона
 interface Phone {
   name: string;
   image: string;
@@ -188,17 +199,25 @@ interface Phone {
   wirelessCharging: boolean;
   price: string;
 }
+
+// Определение интерфейса Attribute, который описывает структуру объекта атрибута
 interface Attribute {
   key: keyof Phone;
   label: string;
 }
+
 export default defineComponent({
   name: "ComparsionTable",
   setup() {
+    // Состояние, определяющее, показывать ли только различающиеся атрибуты
     const showDifferences = ref(false);
+    // Состояние, определяющее количество отображаемых товаров
     const numberOfProduct = ref(3);
+    // Состояние для поиска
     const searchQuery = ref("");
+    // Состояние, определяющее индекс выбранного телефона
     const selectedPhoneIndex = ref(-1);
+    // Список телефонов
     const phones = ref<Phone[]>([
       {
         name: "Apple iPhone 12",
@@ -285,6 +304,8 @@ export default defineComponent({
         price: "24990 ₽",
       },
     ]);
+
+    // Список атрибутов для отображения в таблице
     const attributes: Attribute[] = [
       { key: "manufacturer", label: "Производитель" },
       { key: "releaseYear", label: "Год Релиза" },
@@ -297,47 +318,75 @@ export default defineComponent({
       { key: "wirelessCharging", label: "Беспроводная зарядка" },
       { key: "price", label: "Стоимость" },
     ];
-    //проверка аттрибутов на отличия
+
+    // Функция для проверки наличия различий в значениях атрибутов
     const hasDifference = (attribute: keyof Phone): boolean => {
-      const firstValue = displayedPhones.value[0][attribute]; // берем атрибут первого телефона из списка
+      const firstValue = displayedPhones.value[0][attribute];
       return displayedPhones.value.some(
         (phone) => phone[attribute] !== firstValue
       ); // проверяем отличается ли хоть одно значение и возвращаем true/false
     };
-    //используем вычисляемое свойство для фильтрации и отображения строк
+
+    // Используем вычисляемое свойство для фильтрации и отображения строк
     const filteredAttributes = computed(() => {
       if (!showDifferences.value) {
-        return attributes; //Если чекбокс без галки возвращаем все атрибуты
+        return attributes; // Если чекбокс без галки возвращаем все атрибуты
       }
-      return attributes.filter((attribute) => hasDifference(attribute.key)); //если чекбокс с галкой проходимся фильтром по массиву атрибутов и оставляем те где hasDifference возвращает true
+      return attributes.filter((attribute) => hasDifference(attribute.key)); // Если чекбокс с галкой, проходимся фильтром по массиву атрибутов и оставляем те, где hasDifference возвращает true
     });
+
+    // Функция для обновления количества отображаемых товаров
     const updateCount = (count: number) => {
       numberOfProduct.value = count;
     };
+
+    // Вычисляемое свойство для получения доступных значений количества отображаемых товаров
     const availbleCounts = computed(() => {
       const maxCount = Math.min(6, phones.value.length);
       return Array.from({ length: maxCount - 1 }, (_, i) => i + 2);
     });
+
+    // Вычисляемое свойство для получения отображаемых телефонов
     const displayedPhones = computed(() => {
       return phones.value.slice(0, numberOfProduct.value);
     });
+
+    // Вычисляемое свойство для получения скрытых телефонов
     const hiddenPhones = computed(() => {
       return phones.value.slice(numberOfProduct.value);
     });
+
+    // Функция для фильтрации телефонов по поисковому запросу
     const filterPhones = (): Phone[] => {
       if (!searchQuery.value) return hiddenPhones.value;
       return hiddenPhones.value.filter((phone) =>
         phone.name.toLocaleLowerCase().includes(searchQuery.value.toLowerCase())
       );
     };
+
+    // Вычисляемое свойство для получения отфильтрованных телефонов
     const filteredPhones = computed(() => filterPhones());
 
+    // Функция для замены телефона
     const replacePhone = (newPhone: Phone) => {
       if (selectedPhoneIndex.value === -1) return;
 
-      phones.value.splice(selectedPhoneIndex.value, 1, newPhone);
+      // Получаем индекс старого телефона, который будет заменен
+      const oldPhone = displayedPhones.value[selectedPhoneIndex.value];
+
+      // Находим индекс нового телефона в списке hiddenPhones
+      const newPhoneIndex = phones.value.findIndex(
+        (phone) => phone === newPhone
+      );
+
+      // Заменяем старый телефон на новый
+      phones.value.splice(newPhoneIndex, 1, oldPhone);
+      phones.value.splice(phones.value.indexOf(oldPhone), 1, newPhone);
+
+      // Сбрасываем индекс выбранного телефона
       selectedPhoneIndex.value = -1;
     };
+
     return {
       showDifferences,
       phones,
@@ -365,6 +414,7 @@ export default defineComponent({
   line-height: 21.09px;
   color: #3b4157;
 }
+/* стили заголовка */
 .head {
   display: flex;
   align-items: center;
@@ -401,6 +451,20 @@ export default defineComponent({
   font-weight: bold;
   text-decoration: underline;
 }
+/* Таблица */
+.table-container {
+  padding-left: 166px;
+  padding-right: 166px;
+  padding-bottom: 91px;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+/* верхяя часть таблицы */
+.thead {
+  background: white;
+}
 .checkbox-label {
   display: flex;
   @extend %typography;
@@ -412,19 +476,7 @@ export default defineComponent({
 .checkbox-input {
   margin-right: 10px;
 }
-.table-container {
-  padding-left: 166px;
-  padding-right: 166px;
-  padding-bottom: 91px;
-}
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.thead {
-  background: white;
-}
-
+/* карточка телефона */
 .phone-card {
   width: fit-content;
   text-align: center;
@@ -440,47 +492,11 @@ export default defineComponent({
   text-align: center;
   margin-bottom: 74px;
 }
-
-.dropdown-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-.input-search {
-  width: 364px;
-  height: 47px;
-  border-radius: 5px;
-  margin: 34px 0 18px 0;
-  border-width: 1px;
-  border-color: #c1c1c1;
-  padding: 0 0 0 16px;
-  font-family: Roboto;
-  font-size: 24px;
-  font-weight: 400;
-  line-height: 28.13px;
-  text-align: left;
-}
-.reverse-arrow {
-  width: fit-content;
-  margin: 0 18px 0 18px;
-}
-.phone-image-dropdown {
-  width: 24px;
-  height: 50px;
-}
-.hidPhone-text {
-  font-family: Roboto;
-  font-size: 18px;
-  font-weight: 400;
-  line-height: 40px;
-  text-align: left;
-  margin-left: 23px;
-}
+/* дропдаун */
 .dropdown {
   position: relative;
   top: 71px;
 }
-
 .dropdown summary {
   list-style: none;
   list-style-type: none;
@@ -495,7 +511,17 @@ export default defineComponent({
 .dropdown summary:focus {
   outline: none;
 }
-
+.dropdown[open] > summary::before {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1;
+}
+/* дропдаун элементы */
 .dropdown-content {
   position: absolute;
   left: 50%;
@@ -509,6 +535,22 @@ export default defineComponent({
   border: 1px solid #e0e0e0;
   border-radius: 6px;
 }
+.input-search {
+  width: 364px;
+  height: 47px;
+  border-radius: 5px;
+  margin: 34px 0 18px 0;
+  border-width: 1px;
+  border-color: #c1c1c1;
+  padding: 0 0 0 16px;
+  font-family: Roboto;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 28.13px;
+  text-align: left;
+  outline: none;
+}
+/* дропдаун лист */
 .dropdown ul {
   list-style: none;
   padding: 0;
@@ -541,16 +583,29 @@ export default defineComponent({
   border-width: 0 10px 10px 10px;
   border-color: transparent transparent #ffffff transparent;
 }
-.dropdown[open] > summary::before {
-  content: " ";
-  display: block;
-  position: fixed;
-  top: 0;
-  right: 0;
-  left: 0;
-  bottom: 0;
-  z-index: 1;
+/* дропдаун item */
+.dropdown-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
 }
+.reverse-arrow {
+  width: fit-content;
+  margin: 0 18px 0 18px;
+}
+.phone-image-dropdown {
+  width: 24px;
+  height: 50px;
+}
+.hidPhone-text {
+  font-family: Roboto;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 40px;
+  text-align: left;
+  margin-left: 23px;
+}
+/* блок характеристик */
 .table-row {
   border-bottom: 1px solid #cdcfd2;
   height: 114px;
@@ -576,6 +631,7 @@ td {
   @extend %typography;
   text-align: left;
 }
+/* скроллбар */
 /* width */
 ::-webkit-scrollbar {
   width: 15px;
