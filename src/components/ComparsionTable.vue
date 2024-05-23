@@ -4,39 +4,117 @@
       <h1 class="title">Смартфоны</h1>
       <p class="display-products">
         Отобразить товары:
-        <a class="button" @click="updateCount(2)"> 2 </a>
-        <a class="button" @click="updateCount(3)">3 </a>
-        <a class="button" @click="updateCount(4)">4 </a>
-        <a class="button" @click="updateCount(5)">5 </a>
-        <a class="button" @click="updateCount(6)">6</a>
+        <a
+          v-for="num in availbleCounts"
+          :key="num"
+          class="button-product"
+          :class="{ active: num === numberOfProduct }"
+          @click="updateCount(num)"
+        >
+          {{ num }}
+        </a>
       </p>
     </div>
-    <label class="checkbox-label">
-      <input type="checkbox" v-model="showDifferences" class="checkbox-input" />
-      <span>Показать различия</span>
-    </label>
     <div class="table-container">
       <table class="table">
         <thead class="thead">
           <tr>
-            <th></th>
+            <th>
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  v-model="showDifferences"
+                  class="checkbox-input"
+                />
+                <span>Показать различия</span>
+              </label>
+            </th>
             <th
               v-for="(phone, index) in displayedPhones"
               :key="index"
               class="phone-header"
             >
               <div class="phone-card">
-                <img
-                  :src="require(`@/assets/${phone.image}`)"
-                  :alt="phone.name"
-                  class="phone-image"
-                />
-                <p class="phone-name">{{ phone.name }}</p>
+                <div>
+                  <img
+                    :src="require(`@/assets/${phone.image}`)"
+                    :alt="phone.name"
+                    class="phone-image"
+                  />
+                  <p class="phone-name">{{ phone.name }}</p>
+                </div>
+                <details class="dropdown">
+                  <summary v-if="hiddenPhones.length" role="button">
+                    <svg
+                      width="30"
+                      height="27"
+                      viewBox="0 0 30 27"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M24.375 10.125L15 18.5625L5.625 10.125"
+                        stroke="#0D5ADC"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </summary>
+                  <div class="dropdown-content">
+                    <input
+                      class="input-search"
+                      type="text"
+                      v-model="searchQuery"
+                      placeholder="Поиск"
+                      @input="filterPhones"
+                    />
+                    <ul>
+                      <li
+                        v-for="hiddenPhone in filteredPhones"
+                        :key="hiddenPhone.name"
+                        class="dropdown-item"
+                      >
+                        <button
+                          class="dropdown-btn double-arrow"
+                          @click="replacePhone"
+                        >
+                          <svg
+                            class="reverse-arrow"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 20 20"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M19.0909 4.54548H3.10384L6.09735 1.55191C6.45238 1.19694 6.45238 0.621302 6.09735 0.266272C5.74239 -0.0887575 5.16675 -0.0887575 4.81172 0.266272L0.266272 4.81172C-0.0887575 5.16669 -0.0887575 5.74233 0.266272 6.09735L4.81172 10.6428C4.98923 10.8203 5.2219 10.9091 5.45457 10.9091C5.68723 10.9091 5.9199 10.8203 6.09735 10.6428C6.45238 10.2878 6.45238 9.7122 6.09735 9.35717L3.10384 6.36366H19.0909C19.593 6.36366 20 5.95663 20 5.45457C20 4.95251 19.593 4.54548 19.0909 4.54548Z"
+                              fill="#36935B"
+                            />
+                            <path
+                              d="M15.1883 9.35717C14.8333 9.0022 14.2576 9.0022 13.9026 9.35717C13.5476 9.71214 13.5476 10.2878 13.9026 10.6428L16.8962 13.6364H0.90912C0.40706 13.6364 3.02863e-05 14.0434 3.02863e-05 14.5455C3.02863e-05 15.0475 0.40706 15.4546 0.90912 15.4546H16.8962L13.9027 18.4481C13.5476 18.8031 13.5476 19.3787 13.9027 19.7338C14.0801 19.9112 14.3128 20 14.5455 20C14.7781 20 15.0108 19.9112 15.1883 19.7337L19.7337 15.1883C20.0887 14.8333 20.0887 14.2576 19.7337 13.9026L15.1883 9.35717Z"
+                              fill="#36935B"
+                            />
+                          </svg>
+                        </button>
+                        <img
+                          :src="require(`@/assets/${hiddenPhone.image}`)"
+                          :alt="hiddenPhone.name"
+                          class="phone-image-dropdown"
+                        />
+                        <span class="hidPhone-text">
+                          {{ hiddenPhone.name }}
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </details>
               </div>
             </th>
           </tr>
         </thead>
         <tbody>
+          <div class="fon"></div>
           <tr
             v-for="(attribute, index) in filteredAttributes"
             :key="index"
@@ -95,7 +173,6 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed } from "vue";
-
 interface Phone {
   name: string;
   image: string;
@@ -119,6 +196,7 @@ export default defineComponent({
   setup() {
     const showDifferences = ref(false);
     const numberOfProduct = ref(3);
+    const searchQuery = ref("");
     const phones = ref<Phone[]>([
       {
         name: "Apple iPhone 12",
@@ -235,15 +313,36 @@ export default defineComponent({
       numberOfProduct.value = count;
       //console.log(count);
     };
+    const availbleCounts = computed(() => {
+      const maxCount = Math.min(6, phones.value.length);
+      return Array.from({ length: maxCount - 1 }, (_, i) => i + 2);
+    });
     const displayedPhones = computed(() => {
       return phones.value.slice(0, numberOfProduct.value);
     });
+    const hiddenPhones = computed(() => {
+      return phones.value.slice(numberOfProduct.value);
+    });
+    const filterPhones = (): Phone[] => {
+      if (!searchQuery.value) return hiddenPhones.value;
+      return hiddenPhones.value.filter((phone) =>
+        phone.name.toLocaleLowerCase().includes(searchQuery.value.toLowerCase())
+      );
+    };
+    const filteredPhones = computed(() => filterPhones());
     return {
       showDifferences,
       phones,
+      numberOfProduct,
       displayedPhones,
       filteredAttributes,
       updateCount,
+      hiddenPhones,
+      searchQuery,
+      filterPhones,
+      filteredPhones,
+      availbleCounts,
+      // replacePhone,
     };
   },
 });
@@ -264,13 +363,7 @@ export default defineComponent({
   margin: 0 166px 20px 166px;
   height: 60px;
 }
-a.button {
-  cursor: pointer;
-  color: #0d5adc;
-}
-a.button :active {
-  text-decoration: underline;
-}
+
 .title {
   font-family: Roboto;
   font-size: 48px;
@@ -288,44 +381,45 @@ a.button :active {
   line-height: 60px;
   letter-spacing: 0.02em;
   text-align: left;
-
   color: #0d5adc;
   margin-bottom: 20px;
 }
-.phones-block {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 100%;
+.button-product {
+  cursor: pointer;
+  margin-right: 5px;
 }
-.phone-card {
-  width: fit-content;
+.button-product.active {
+  font-weight: bold;
+  text-decoration: underline;
 }
 .checkbox-label {
   display: flex;
   @extend %typography;
   color: #0d5adc;
   cursor: pointer;
-  margin: 0 0 0 0;
-  position: absolute;
-  top: 330px;
-  left: 166px;
+  margin: 76px 0 0 0;
+  justify-self: end;
 }
 .checkbox-input {
   margin-right: 10px;
 }
-.phone-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+.table-container {
+  padding-left: 166px;
+  padding-right: 166px;
+  padding-bottom: 91px;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
 }
 .thead {
   background: white;
 }
-.phone-header {
+
+.phone-card {
+  width: fit-content;
   text-align: center;
-  margin-left: -50px;
+  display: flex;
 }
 .phone-image {
   width: 64.8px;
@@ -337,20 +431,119 @@ a.button :active {
   text-align: center;
   margin-bottom: 74px;
 }
-.table-container {
-  padding-left: 166px;
-  padding-right: 166px;
-  padding-bottom: 91px;
+
+.dropdown-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
 }
-.table {
+.input-search {
+  width: 364px;
+  height: 47px;
+  border-radius: 5px;
+  margin: 34px 0 18px 0;
+  border-width: 1px;
+  border-color: #c1c1c1;
+  padding: 0 0 0 16px;
+  font-family: Roboto;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 28.13px;
+  text-align: left;
+}
+.reverse-arrow {
+  width: fit-content;
+  margin: 0 18px 0 18px;
+}
+.phone-image-dropdown {
+  width: 24px;
+  height: 50px;
+}
+.hidPhone-text {
+  font-family: Roboto;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 40px;
+  text-align: left;
+  margin-left: 23px;
+}
+.dropdown {
+  position: relative;
+  top: 71px;
+}
+
+.dropdown summary {
+  list-style: none;
+  list-style-type: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.dropdown > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dropdown summary:focus {
+  outline: none;
+}
+
+.dropdown-content {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 421px;
+  max-height: 336px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  z-index: 2;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+}
+.dropdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.dropdown ul li {
+  padding: 15px 0 15px 0;
+  display: flex;
+  align-items: center;
+}
+.dropdown ul li a:link,
+.dropdown ul li a:visited {
   width: 100%;
-  border-collapse: collapse;
-  // background-color: #f4f9fc;
+  box-sizing: border-box;
+  color: var(--dropdown-color);
+  text-decoration: none;
+}
+.dropdown ul li a:hover {
+  background-color: #f0f0f0;
+}
+.dropdown ul::before {
+  content: " ";
+  position: absolute;
+  width: 0;
+  height: 0;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-style: solid;
+  border-width: 0 10px 10px 10px;
+  border-color: transparent transparent #ffffff transparent;
 }
 .table-row {
   border-bottom: 1px solid #cdcfd2;
   height: 114px;
   background-color: #f4f9fc;
+}
+.fon {
+  z-index: -1;
+  width: 100%;
+  left: 0;
+  bottom: 0;
+  background-color: #f4f9fc;
+  padding-bottom: 91px;
 }
 .labels {
   width: 255px;
@@ -364,7 +557,18 @@ td {
   @extend %typography;
   text-align: left;
 }
-svg {
-  margin: auto;
+/* width */
+::-webkit-scrollbar {
+  width: 15px;
+}
+/* Track */
+::-webkit-scrollbar-track {
+  background-color: #ffffff;
+}
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #e3e3e3;
+  border: 5px solid #ffffff;
+  border-radius: 8px;
 }
 </style>

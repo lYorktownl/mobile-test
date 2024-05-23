@@ -1,9 +1,8 @@
 <template>
   <div class="app-container">
     <HeaderComponent />
-    <hr style="margin: 0; color: #A6A5A9;">
+    <hr style="margin: 0; color: #a6a5a9" />
     <ComparsionTable />
-    <div class="fon"></div>
   </div>
 </template>
 
