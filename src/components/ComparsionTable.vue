@@ -33,6 +33,7 @@
               v-for="(phone, index) in displayedPhones"
               :key="index"
               class="phone-header"
+              @click="selectedPhoneIndex = index"
             >
               <div class="phone-card">
                 <div>
@@ -43,8 +44,8 @@
                   />
                   <p class="phone-name">{{ phone.name }}</p>
                 </div>
-                <details class="dropdown">
-                  <summary v-if="hiddenPhones.length" role="button">
+                <details v-if="hiddenPhones.length" class="dropdown">
+                  <summary role="button">
                     <svg
                       width="30"
                       height="27"
@@ -77,7 +78,7 @@
                       >
                         <button
                           class="dropdown-btn double-arrow"
-                          @click="replacePhone"
+                          @click="replacePhone(hiddenPhone)"
                         >
                           <svg
                             class="reverse-arrow"
@@ -197,6 +198,7 @@ export default defineComponent({
     const showDifferences = ref(false);
     const numberOfProduct = ref(3);
     const searchQuery = ref("");
+    const selectedPhoneIndex = ref(-1);
     const phones = ref<Phone[]>([
       {
         name: "Apple iPhone 12",
@@ -289,7 +291,7 @@ export default defineComponent({
       { key: "screenSize", label: "Диагональ экрана (дюйм)" },
       { key: "country", label: "Страна-производитель" },
       { key: "memory", label: "Объем Памяти" },
-      { key: "refreshRate", label: "Частота обновлеия экрана" },
+      { key: "refreshRate", label: "Частота обновления экрана" },
       { key: "nfc", label: "NFC" },
       { key: "esim", label: "Поддержка esim" },
       { key: "wirelessCharging", label: "Беспроводная зарядка" },
@@ -311,7 +313,6 @@ export default defineComponent({
     });
     const updateCount = (count: number) => {
       numberOfProduct.value = count;
-      //console.log(count);
     };
     const availbleCounts = computed(() => {
       const maxCount = Math.min(6, phones.value.length);
@@ -330,6 +331,13 @@ export default defineComponent({
       );
     };
     const filteredPhones = computed(() => filterPhones());
+
+    const replacePhone = (newPhone: Phone) => {
+      if (selectedPhoneIndex.value === -1) return;
+
+      phones.value.splice(selectedPhoneIndex.value, 1, newPhone);
+      selectedPhoneIndex.value = -1;
+    };
     return {
       showDifferences,
       phones,
@@ -342,7 +350,8 @@ export default defineComponent({
       filterPhones,
       filteredPhones,
       availbleCounts,
-      // replacePhone,
+      replacePhone,
+      selectedPhoneIndex,
     };
   },
 });
@@ -531,6 +540,16 @@ export default defineComponent({
   border-style: solid;
   border-width: 0 10px 10px 10px;
   border-color: transparent transparent #ffffff transparent;
+}
+.dropdown[open] > summary::before {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1;
 }
 .table-row {
   border-bottom: 1px solid #cdcfd2;
